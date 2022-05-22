@@ -129,6 +129,11 @@ document.addEventListener('DOMContentLoaded', () => {
   input.setAttribute('min', nextAvailableDeliveryString);
   input.setAttribute('pattern', 'd{4}-d{2}-d{2}');
   input.addEventListener('input', validateDeliveryDate);
+  input.addEventListener('click', () => {
+    try {
+      input.showPicker();
+    } catch {}
+  });
 
   input.value = nextAvailableDeliveryString;
 });
