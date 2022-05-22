@@ -121,6 +121,7 @@ Template: baker
 
 .alzr-validation {
   margin-bottom: 9px !important;
+  line-height: 1.5;
   color: var(--color-validation);
 }
 
