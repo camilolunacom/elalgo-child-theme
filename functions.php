@@ -120,7 +120,7 @@ function alzr_validate_checkout_fields( $fields, $errors ) {
 				$errors->add( 'delivery_date', 'No hacemos entregas en la fecha seleccionada. Por favor escoge otra fecha.' );
 				break;
 			case 'invalid':
-				$errors->add( 'delivery_date', 'Lo sentimos, no alcanzamos a hacer la entre este día. Por favor escoge otra fecha.' );
+				$errors->add( 'delivery_date', 'Lo sentimos, no alcanzamos a hacer la entrega este día. Por favor escoge otra fecha.' );
 				break;
 			case 'empty':
 				$errors->add( 'delivery_date', 'Por favor elige una fecha de entrega.' );
