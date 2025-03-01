@@ -126,7 +126,6 @@ function alzr_validate_checkout_fields( $fields, $errors ) {
 				$errors->add( 'delivery_date', 'Por favor elige una fecha de entrega.' );
 				break;
 			default:
-				update_post_meta( $fields->get_id(), '_billing_delivery', $delivery_date );
 				break;
 		}
 	} else {
