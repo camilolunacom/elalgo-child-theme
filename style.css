@@ -71,6 +71,14 @@ Template: baker
   border-radius: 0;
 }
 
+.yith-wapo-block .yith-wapo-addon .options.per-row-4 .yith-wapo-option {
+  margin-right: 2.6666%;
+}
+
+.yith-wapo-block .yith-wapo-addon .options.per-row-4 .yith-wapo-option:nth-of-type(4n) {
+  margin-right: 0;
+}
+
 /* Checkout */
 
 .woocommerce-error {
