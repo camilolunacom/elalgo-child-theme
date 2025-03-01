@@ -65,14 +65,14 @@ function custom_override_checkout_fields( $fields ) {
 	$fields['billing']['billing_delivery']      = array(
 		'type'     => 'hidden',
 		'required' => false,
-		'priority' => 114,
+		'priority' => 98,
 	);
 	$fields['billing']['billing_delivery_display']      = array(
 		'type'     => 'date',
 		'label'    => 'Fecha de entrega',
 		'required' => true,
 		'class'    => array( 'form-row-wide' ),
-		'priority' => 115,
+		'priority' => 99,
 	);
 	$fields['order']['order_comments']['label'] = 'Notas';
 
