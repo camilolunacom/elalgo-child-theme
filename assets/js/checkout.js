@@ -1,32 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const holidays = [
-    '2022-01-01',
-    '2022-01-10',
-    '2022-03-21',
-    '2022-04-14',
-    '2022-04-15',
-    '2022-05-01',
-    '2022-05-30',
-    '2022-06-20',
-    '2022-06-27',
-    '2022-07-04',
-    '2022-07-20',
-    '2022-08-07',
-    '2022-08-15',
-    '2022-10-17',
-    '2022-11-07',
-    '2022-11-14',
-    '2022-12-08',
-    '2022-12-25',
-  ];
-
-  const input = document.querySelector('#billing_delivery');
-
-  const exceptions = [];
+  const input = document.querySelector("#billing_delivery_display");
 
   const delivery = new Date();
 
   const deliveryToday = window.canDeliverToday;
+  const { exceptionDates } = window;
+  const { noDeliveryDates } = window;
+
   const dayOfWeek = delivery.getDay();
   const afternoon = delivery.getHours() > 13;
 
@@ -49,8 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function isHoliday(date) {
     const dateString = formatDate(date);
-    if (!exceptions.includes(dateString)) {
-      if (date.getDay() === 0 || holidays.includes(dateString)) {
+    if (!exceptionDates.includes(dateString)) {
+      if (date.getDay() === 0 || noDeliveryDates.includes(dateString)) {
         return true;
       }
     }
@@ -73,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * @param {date} date Date object
    * @returns New date when delivery can happen
    */
-  function minDeliveryDate(date) {
+  function earliestDeliveryDate(date) {
     if (dayOfWeek === 6 || dayOfWeek === 0) {
       date.setHours(0, 0, 0, 0);
       nextDay(date);
@@ -83,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
       nextDay(date);
     } else if (afternoon || !deliveryToday) {
       nextDay(date);
+      date.setHours(0, 0, 0, 0);
     }
     notHoliday(date);
     return date;
@@ -92,15 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let validation = document.querySelector('.alzr-validation');
     if (!validation) {
       validation = document.createElement('p');
-      validation.classList.add('form-row', 'form-row-wide', 'alzr-validation');
-      document
-        .querySelector('.woocommerce-billing-fields__field-wrapper')
-        .appendChild(validation);
+      validation.classList.add('alzr-validation');
+      document.querySelector("#billing_delivery_display_field").appendChild(validation);
     }
     return validation;
   }
 
-  const nextAvailableDelivery = minDeliveryDate(delivery);
+  const nextAvailableDelivery = earliestDeliveryDate(delivery);
 
   /**
    * Handler for input field
@@ -110,17 +89,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const field = e.target;
     const date = new Date(`${field.value}T00:00`);
     const validation = getValidationP();
+    const billingDelivery = document.querySelector("#billing_delivery");
+
     if (isHoliday(date)) {
       validation.innerHTML =
         'Lo sentimos, no hacemos entregas domingos ni festivos. Por favor escoge otra fecha.';
       field.classList.add('alzr-invalid');
+      billingDelivery.value = 'holiday';
     } else if (date < nextAvailableDelivery) {
       validation.innerHTML =
-        'Lo sentimos, la fecha escogida es en el pasado. Por favor escoge otra fecha.';
+        'Lo sentimos, no podemos entregar este d&iacute;a. Por favor escoge una fecha posterior.';
       field.classList.add('alzr-invalid');
+      billingDelivery.value = 'invalid';
     } else {
       validation.innerHTML = '';
       field.classList.remove('alzr-invalid');
+      billingDelivery.value = field.value;
     }
   }
 

@@ -40,25 +40,25 @@ add_action( 'after_setup_theme', 'my_child_theme_locale' );
  */
 function add_gtm_head() {
 	?>
-<!-- Google Tag Manager -->
-<script>
-(function(w, d, s, l, i) {
-  w[l] = w[l] || [];
-  w[l].push({
-    'gtm.start': new Date().getTime(),
-    event: 'gtm.js'
-  });
-  var f = d.getElementsByTagName(s)[0],
-    j = d.createElement(s),
-    dl = l != 'dataLayer' ? '&l=' + l : '';
-  j.async = true;
-  j.src =
-    'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
-  f.parentNode.insertBefore(j, f);
-})(window, document, 'script', 'dataLayer', 'GTM-KBWTFD9');
-</script>
-<!-- End Google Tag Manager -->
-<?php
+	<!-- Google Tag Manager -->
+	<script>
+	(function(w, d, s, l, i) {
+	w[l] = w[l] || [];
+	w[l].push({
+		'gtm.start': new Date().getTime(),
+		event: 'gtm.js'
+	});
+	var f = d.getElementsByTagName(s)[0],
+		j = d.createElement(s),
+		dl = l != 'dataLayer' ? '&l=' + l : '';
+	j.async = true;
+	j.src =
+		'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+	f.parentNode.insertBefore(j, f);
+	})(window, document, 'script', 'dataLayer', 'GTM-KBWTFD9');
+	</script>
+	<!-- End Google Tag Manager -->
+	<?php
 }
 add_action( 'wp_head', 'add_gtm_head', 10 );
 
@@ -69,11 +69,11 @@ add_action( 'wp_head', 'add_gtm_head', 10 );
  */
 function add_gtm_body() {
 	?>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KBWTFD9" height="0" width="0"
-    style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-<?php
+	<!-- Google Tag Manager (noscript) -->
+	<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KBWTFD9" height="0" width="0"
+		style="display:none;visibility:hidden"></iframe></noscript>
+	<!-- End Google Tag Manager (noscript) -->
+	<?php
 }
 add_action( 'baker_edge_action_after_body_tag', 'add_gtm_body', 5 );
 
@@ -105,6 +105,11 @@ function custom_override_checkout_fields( $fields ) {
 		'priority' => 25,
 	);
 	$fields['billing']['billing_delivery']      = array(
+		'type'     => 'hidden',
+		'required' => false,
+		'priority' => 114,
+	);
+	$fields['billing']['billing_delivery_display']      = array(
 		'type'     => 'date',
 		'label'    => 'Fecha de entrega',
 		'required' => true,
@@ -124,6 +129,31 @@ function custom_override_checkout_fields( $fields ) {
 	return $fields;
 }
 add_filter( 'woocommerce_checkout_fields', 'custom_override_checkout_fields' );
+
+function alzr_validate_checkout_fields( $fields, $errors ) {
+	// Check if delivery date is 'holiday', 'invalid', or 'emtpy', then add error accordingly.
+	if ( isset( $_POST['billing_delivery'] ) ) {
+		$delivery_date = $_POST['billing_delivery'];
+
+		switch ( $delivery_date ) {
+			case 'holiday':
+				$errors->add( 'delivery_date', 'No hacemos entregas en la fecha seleccionada. Por favor escoge otra fecha.' );
+				break;
+			case 'invalid':
+				$errors->add( 'delivery_date', 'Lo sentimos, no alcanzamos a hacer la entre este día. Por favor escoge otra fecha.' );
+				break;
+			case 'empty':
+				$errors->add( 'delivery_date', 'Por favor elige una fecha de entrega.' );
+				break;
+			default:
+				update_post_meta( $fields->get_id(), '_billing_delivery', $delivery_date );
+				break;
+		}
+	} else {
+		$errors->add( 'delivery_date', 'No hemos encontrado la fecha de entrega del pedido.' );
+	}
+}
+add_action( 'woocommerce_after_checkout_validation', 'alzr_validate_checkout_fields', 10, 2 );
 
 /**
  * Display field value on the order edit page
@@ -189,3 +219,56 @@ function alzr_delivery_date() {
 	wp_add_inline_script( 'alzr-checkout', 'var canDeliverToday = ' . wp_json_encode( $today ) . ';', 'before' );
 }
 add_filter( 'wp_enqueue_scripts', 'alzr_delivery_Date' );
+
+if ( function_exists( 'acf_add_options_page' ) ) {
+
+	acf_add_options_page(
+		array(
+			'page_title' => 'Elalgo - Opciones',
+			'menu_title' => 'Elalgo',
+			'menu_slug'  => 'elalgo-settings',
+			'capability' => 'edit_posts',
+			'redirect'   => false,
+		)
+	);
+}
+
+add_filter( 'woocommerce_after_checkout_form', 'generate_dates' );
+
+function generate_dates() {
+	$no_delivery = get_field('no_delivery', 'option');
+	$exceptions = get_field('exceptions', 'option');
+
+	if ( $no_delivery ) {
+		$no_delivery_dates = array();
+
+		foreach( $no_delivery as $row ) {
+			$no_delivery_dates[] = $row['date'];
+		}
+
+		wp_add_inline_script( 'alzr-checkout', 'var noDeliveryDates = ' . wp_json_encode( $no_delivery_dates ) . ';', 'before');
+	}
+
+	echo '<br>';
+
+	if ( $exceptions ) {
+		$exception_dates = array();
+
+		foreach( $exceptions as $row ) {
+			$exception_dates[] = $row['date'];
+		}
+
+		wp_add_inline_script( 'alzr-checkout', 'var exceptionDates = ' . wp_json_encode( $exception_dates ) . ';', 'before');
+	}
+}
+
+add_action( 'woocommerce_before_single_product', 'woocommerce_breadcrumb', 20, 0);
+
+/**
+ * Rename "home" in breadcrumb
+ */
+function wcc_change_breadcrumb_home_text( $defaults ) {
+	$defaults['home'] = 'Tienda';
+	return $defaults;
+}
+add_filter( 'woocommerce_breadcrumb_defaults', 'wcc_change_breadcrumb_home_text' );
