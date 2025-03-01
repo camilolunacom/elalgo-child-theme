@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   const input = document.querySelector("#billing_delivery_display");
 
   const delivery = new Date();
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * @returns Date string formatted
    */
   function formatDate(date) {
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   }
 
   /**
@@ -70,12 +70,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getValidationP() {
-    let validation = document.querySelector('.alzr-validation');
+    let validation = document.querySelector(".alzr-validation");
+
     if (!validation) {
-      validation = document.createElement('p');
-      validation.classList.add('alzr-validation');
+      validation = document.createElement("p");
+      validation.classList.add("alzr-validation");
       document.querySelector("#billing_delivery_display_field").appendChild(validation);
     }
+
     return validation;
   }
 
@@ -92,28 +94,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const billingDelivery = document.querySelector("#billing_delivery");
 
     if (isHoliday(date)) {
-      validation.innerHTML =
-        'Lo sentimos, no hacemos entregas domingos ni festivos. Por favor escoge otra fecha.';
-      field.classList.add('alzr-invalid');
-      billingDelivery.value = 'holiday';
+      validation.innerHTML = "Lo sentimos, no hacemos entregas domingos ni festivos. Por favor escoge otra fecha.";
+      field.classList.add("alzr-invalid");
+      billingDelivery.value = "holiday";
     } else if (date < nextAvailableDelivery) {
-      validation.innerHTML =
-        'Lo sentimos, no podemos entregar este d&iacute;a. Por favor escoge una fecha posterior.';
-      field.classList.add('alzr-invalid');
-      billingDelivery.value = 'invalid';
+      validation.innerHTML = "Lo sentimos, no podemos entregar este d&iacute;a. Por favor escoge una fecha posterior.";
+      field.classList.add("alzr-invalid");
+      billingDelivery.value = "invalid";
     } else {
-      validation.innerHTML = '';
-      field.classList.remove('alzr-invalid');
+      validation.innerHTML = "";
+      field.classList.remove("alzr-invalid");
       billingDelivery.value = field.value;
     }
   }
 
   const nextAvailableDeliveryString = formatDate(nextAvailableDelivery);
 
-  input.setAttribute('min', nextAvailableDeliveryString);
-  input.setAttribute('pattern', 'd{4}-d{2}-d{2}');
-  input.addEventListener('input', validateDeliveryDate);
-  input.addEventListener('click', () => {
+  input.setAttribute("min", nextAvailableDeliveryString);
+  input.setAttribute("pattern", "d{4}-d{2}-d{2}");
+  input.addEventListener("input", validateDeliveryDate);
+  input.addEventListener("click", () => {
     try {
       input.showPicker();
     } catch {}

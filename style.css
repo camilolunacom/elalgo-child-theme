@@ -481,12 +481,6 @@ span.optional {
   visibility: hidden;
 }
 
-p#billing_country_field::after,
-p#shipping_country_field::after {
-  content: " / Bogotá";
-  font-weight: bold;
-}
-
 button.woocommerce-button.button.woocommerce-form-login__submit {
   left: 20px;
 }
@@ -990,9 +984,6 @@ img.standard_resolution {
   dd.variation-Para {
     margin-top: 0px !important;
   }
-  .wpb_single_image .vc_figure {
-    max-width: 87% !important;
-  }
   .edgtf-title .edgtf-title-image img {
     height: 100px !important;
   }
@@ -1362,10 +1353,4 @@ img.edgtf-normal-logo {
 
 .edgtf-position-right {
   width: 300px;
-}
-
-@media only screen and (min-device-width: 769px) and (max-device-width: 2560px) {
-  #post-19453 {
-    top: 0px !important;
-  }
 }

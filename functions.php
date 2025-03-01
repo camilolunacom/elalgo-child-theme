@@ -16,7 +16,7 @@ if ( ! function_exists( 'baker_edge_child_theme_enqueue_scripts' ) ) {
 		wp_enqueue_style( 'baker-edge-child-style', get_stylesheet_directory_uri() . '/style.css', array( $parent_style ), filemtime( get_stylesheet_directory() . '/style.css' ) );
 		// Only for checkout pages.
 		if ( is_checkout() ) {
-			wp_enqueue_script( 'alzr-checkout', get_stylesheet_directory_uri() . '/assets/js/checkout.js', array( 'jquery' ), filemtime( get_stylesheet_directory_uri() . '/assets/js/checkout.js' ), true );
+			wp_enqueue_script( 'alzr-checkout', get_stylesheet_directory_uri() . '/assets/js/checkout.js', array( 'jquery' ), filemtime( get_stylesheet_directory() . '/assets/js/checkout.js' ), true );
 			wp_enqueue_style( 'jquery-ui' );
 		}
 	}
@@ -34,50 +34,6 @@ function my_child_theme_locale() {
 add_action( 'after_setup_theme', 'my_child_theme_locale' );
 
 /**
- * Add Google Tag Manager javascript code as close to the opening <head> tag as possible
- *
- * @return void
- */
-function add_gtm_head() {
-	?>
-	<!-- Google Tag Manager -->
-	<script>
-	(function(w, d, s, l, i) {
-	w[l] = w[l] || [];
-	w[l].push({
-		'gtm.start': new Date().getTime(),
-		event: 'gtm.js'
-	});
-	var f = d.getElementsByTagName(s)[0],
-		j = d.createElement(s),
-		dl = l != 'dataLayer' ? '&l=' + l : '';
-	j.async = true;
-	j.src =
-		'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
-	f.parentNode.insertBefore(j, f);
-	})(window, document, 'script', 'dataLayer', 'GTM-KBWTFD9');
-	</script>
-	<!-- End Google Tag Manager -->
-	<?php
-}
-add_action( 'wp_head', 'add_gtm_head', 10 );
-
-/**
- * Add Google Tag Manager noscript codeimmediately after the opening <body> tag
- *
- * @return void
- */
-function add_gtm_body() {
-	?>
-	<!-- Google Tag Manager (noscript) -->
-	<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KBWTFD9" height="0" width="0"
-		style="display:none;visibility:hidden"></iframe></noscript>
-	<!-- End Google Tag Manager (noscript) -->
-	<?php
-}
-add_action( 'baker_edge_action_after_body_tag', 'add_gtm_body', 5 );
-
-/**
  * Override default address fields for checkout
  *
  * @param array $address_fields Existing address fields.
@@ -87,7 +43,9 @@ function custom_override_default_address_fields( $address_fields ) {
 	$address_fields['address_1']['label']       = 'Dirección';
 	$address_fields['address_1']['placeholder'] = 'Dirección de la empresa o residencia';
 	$address_fields['address_2']['placeholder'] = 'Oficina, apartamento, casa (opcional)';
-	$address_fields['country']['label']         = 'País / Ciudad';
+	$address_fields['country']['label']         = 'País';
+	$address_fields['city']['label']            = 'Ciudad';
+
 	return $address_fields;
 }
 add_filter( 'woocommerce_default_address_fields', 'custom_override_default_address_fields' );
@@ -118,13 +76,35 @@ function custom_override_checkout_fields( $fields ) {
 	);
 	$fields['order']['order_comments']['label'] = 'Notas';
 
-	unset( $fields['billing']['billing_city'] );
-	unset( $fields['billing']['billing_state'] );
-	unset( $fields['billing']['billing_postcode'] );
+	$city_args = array(
+		'Bogota'   => 'Bogotá',
+		'Chia'     => 'Chía',
+		'Cajica'   => 'Cajicá',
+		'Mosquera' => 'Mosquera',
+		'Madrid'   => 'Madrid',
+	);
 
-	unset( $fields['shipping']['shipping_city'] );
-	unset( $fields['shipping']['shipping_state'] );
+	$city_args = wp_parse_args( array (
+		'type'        => 'select',
+		'options'     => $city_args,
+		'input_class' => array( 'wc-enhanced-select' ),
+		'default'     => 'Bogota',
+	), $fields['shipping']['shipping_city'] );
+
+	$fields['billing']['billing_city']   = $city_args;
+	$fields['shipping']['shipping_city'] = $city_args;
+
+	$fields['billing']['billing_state']['default']   = 'CO-CUN';
+	$fields['shipping']['shipping_state']['default'] = 'CO-CUN';
+
+	unset( $fields['billing']['billing_postcode'] );
 	unset( $fields['shipping']['shipping_postcode'] );
+
+	wc_enqueue_js( "
+	jQuery( ':input.wc-enhanced-select' ).filter( ':not(.enhanced)' ).each( function() {
+		var select2_args = { minimumResultsForSearch: 5, width: '100%' };
+		jQuery( this ).select2( select2_args ).addClass( 'enhanced' );
+	});" );
 
 	return $fields;
 }
@@ -272,3 +252,21 @@ function wcc_change_breadcrumb_home_text( $defaults ) {
 	return $defaults;
 }
 add_filter( 'woocommerce_breadcrumb_defaults', 'wcc_change_breadcrumb_home_text' );
+
+/**
+ * Force state to "Cundinamarca"
+ */
+function alzr_cart_filter_co_states( $states ) {
+	$states[ 'CO' ] = array( 'CO-CUN' => __( 'Cundinamarca', 'woocommerce' ) );
+	return $states;
+}
+add_filter( 'woocommerce_states', 'alzr_cart_filter_co_states' );
+
+/**
+ * Set default state
+ */
+function alzr_default_state() {
+	return 'CO-CUN';
+}
+add_filter( 'default_checkout_billing_state', 'alzr_default_state' );
+add_filter( 'default_checkout_shipping_state', 'alzr_default_state' );
