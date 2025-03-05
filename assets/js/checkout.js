@@ -120,4 +120,5 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   input.value = nextAvailableDeliveryString;
+  document.querySelector("#billing_delivery").value = nextAvailableDeliveryString;
 });
